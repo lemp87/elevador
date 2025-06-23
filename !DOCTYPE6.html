@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Cronograma de Elevadores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #0a192f;
+            --secondary-color: #172a46;
+            --accent-color: #64ffda;
+            --accent-hover: #4cd3a9;
+            --light-bg: #233554;
+            --dark-bg: #020c1b;
+            --text-light: #ccd6f6;
+            --text-secondary: #8892b0;
+            --text-dark: #0a192f;
+            --success: #00b894;
+            --danger: #ff6b6b;
+            --warning: #fdcb6e;
+            --border-color: #233554;
+            --card-bg: #112240;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+
+        .logo-img {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        h1 {
+            color: var(--text-light);
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .section {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h2 {
+            color: var(--text-light);
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .form-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        input, button, select, textarea {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
+        }
+
+        input {
+            flex-grow: 1;
+        }
+
+        select {
+            background-color: var(--secondary-color);
+            width: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: transparent;
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        button:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+            transform: translateY(-2px);
+        }
+
+        button.danger {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        button.danger:hover {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        button.success {
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        button.success:hover {
+            background-color: rgba(0, 184, 148, 0.1);
+        }
+
+        button.warning {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        button.warning:hover {
+            background-color: rgba(253, 203, 110, 0.1);
+        }
+
+        .lista-obras, .lista-elevadores {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .obra-item, .elevador-item {
+            background-color: var(--card-bg);
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+        }
+
+        .obra-item:hover, .elevador-item:hover {
+            background-color: var(--light-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .obra-item.selected, .elevador-item.selected {
+            background-color: rgba(100, 255, 218, 0.1);
+            border-color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .obra-header, .elevador-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .item-name {
+            margin-right: 10px;
+            color: var(--text-light);
+        }
+
+        .item-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-regional {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: none;
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: auto;
+        }
+
+        .action-btn:hover {
+            color: var(--text-light);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-btn.delete {
+            color: var(--danger);
+        }
+
+        .action-btn.delete:hover {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .action-btn.edit {
+            color: var(--accent-color);
+        }
+
+        .action-btn.edit:hover {
+            background-color: rgba(100, 255, 218, 0.1);
+        }
+
+        .tarefas-container {
+            display: grid;
+            gap: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tarefa {
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tarefa h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--accent-color);
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .campos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .campos {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .campo {
+            margin-bottom: 10px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .campo input, .campo select, .campo textarea {
+            width: 100%;
+            background-color: var(--dark-bg);
+            border: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .indicador {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+            padding: 8px;
+            background-color: var(--dark-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .indicador-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .verde {
+            background-color: var(--success);
+            box-shadow: 0 0 10px rgba(0, 184, 148, 0.5);
+        }
+
+        .vermelho {
+            background-color: var(--danger);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+            gap: 8px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 15px;
+            color: var(--text-secondary);
+            font-style: italic;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+            font-size: 13px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            padding: 6px 12px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.3s;
+            font-size: 13px;
+        }
+
+        .tab:hover {
+            color: var(--text-light);
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom-color: var(--accent-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard {
+            background-color: var(--secondary-color);
+            border-radius: 10px;
+            padding: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: var(--text-light);
+        }
+
+        .dashboard-content {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--accent-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+            background-color: rgba(100, 255, 218, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .file-upload p {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .drag-text {
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 11px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Glow effect for inputs and buttons */
+        input:focus, select:focus, textarea:focus, button:hover {
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.3);
+        }
+
+        /* Neon text effect */
+        .neon-text {
+            text-shadow: 0 0 5px rgba(100, 255, 218, 0.7), 0 0 10px rgba(100, 255, 218, 0.5);
+        }
+        
+        /* Motivo do Atraso e Observação */
+        .motivo-observacao {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Gráficos adicionais */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chart-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* Ajustes para layout responsivo */
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Estilo para o drag and drop */
+        .file-upload.dragover {
+            background-color: rgba(100, 255, 218, 0.2);
+            border-color: var(--accent-color);
+        }
+        
+        /* Estilo para o status de importação */
+        .import-status {
+            margin-top: 8px;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .import-status.success {
+            background-color: rgba(0, 184, 148, 0.2);
+            color: var(--success);
+        }
+        
+        .import-status.error {
+            background-color: rgba(255, 107, 107, 0.2);
+            color: var(--danger);
+        }
+        
+        .import-status.loading {
+            background-color: rgba(253, 203, 110, 0.2);
+            color: var(--warning);
+        }
+        
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--accent-color);
+            word-break: break-all;
+        }
+        
+        /* Botão menor para escolher arquivo */
+        .choose-file-btn {
+            min-width: 80px;
+            padding: 6px 10px;
+            font-size: 12px;
+            margin: 0 auto;
+        }
+        
+        /* Estilo para a obra com regional */
+        .obra-regional {
+            display: flex;
+            align-items: center;
+            margin-top: 6px;
+        }
+        
+        .obra-regional select {
+            width: 120px;
+            font-size: 12px;
+            padding: 4px 8px;
+            height: 28px;
+        }
+        
+        /* Estilo para os dados das tarefas */
+        .tarefa-data {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        
+        /* Estilo para a observação */
+        .observacao-container {
+            margin-top: 12px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        
+        /* Barra de progresso */
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background-color: var(--dark-bg);
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 5px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgMTAwIDQwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cGF0aCBkPSJNMjAgMTBMMzAgMjBMNDAgMTBMNTAgMjBMNjAgMTBMNzAgMjBMODAgMTAiIHN0cm9rZT0iIzY0ZmZkYSIgc3Ryb2tlLXdpZHRoPSIyIi8+CjxwYXRoIGQ9Ik0xMCAyMEwyMCAzMEwzMCAyMEw0MCAzMEw1MCAyMEw2MCAzMEw3MCAyMEw4MCAzMEw5MCAyMCIgc3Ryb2tlPSIjNjRmZmRhIiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+" alt="Grupo Plaence" class="logo-img">
+                <h1>Controle de Cronograma de Elevadores</h1>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <!-- Importar arquivo -->
+                <div class="section">
+                    <div class="section-title">
+                        <h2>Importar arquivo do Project (.xml)</h2>
+                    </div>
+                    <div class="file-upload" id="dropArea">
+                        <p>Arraste e solte o arquivo aqui ou</p>
+                        <button id="escolherArquivo" class="choose-file-btn">Escolher arquivo</button>
+                        <input type="file" id="fileInput" style="display: none;" accept=".xml">
+                        <div id="fileName" class="file-name"></div>
+                    </div>
+                    <button id="importarDados">
+                        <i class="fas fa-file-import"></i> Importar Dados
+                    </button>
+                    
+                    <!-- Barra de progresso -->
+                    <div id="progressContainer" class="progress-container">
+                        <div id="progressBar" class="progress-bar"></div>
+                    </div>
+                    <div id="progressText" class="progress-text"></div>
+                </div>
+                
+                <!-- Obras -->
+                <div class="section">
+                    <div class="section-title">
+                        <h2>Obras</h2>
+                        <button id="novaObra" class="success" style="min-width: 70px; padding: 4px 8px;">
+                            <i class="fas fa-plus"></i> Nova
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <select id="filtroRegional">
+                            <option value="todas">Filtrar por Regional: Todas</option>
+                            <option value="Porto Alegre">Porto Alegre</option>
+                            <option value="Joinville">Joinville</option>
+                            <option value="Curitiba">Curitiba</option>
+                            <option value="Londrina">Londrina</option>
+                            <option value="Maringá">Maringá</option>
+                            <option value="Campinas">Campinas</option>
+                            <option value="São Paulo">São Paulo</option>
+                            <option value="Campo Grande">Campo Grande</option>
+                            <option value="Cuiabá">Cuiabá</option>
+                        </select>
+                    </div>
+                    
+                    <div id="novaObraForm" style="display: none; margin-bottom: 12px; padding: 8px; background-color: var(--card-bg); border-radius: 6px;">
+                        <input type="text" id="nomeObra" placeholder="Nome da Obra" style="width: 100%; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <select id="selectRegional" style="width: 65%;">
+                                <option value="">Selecione a Regional</option>
+                                <option value="Porto Alegre">Porto Alegre</option>
+                                <option value="Joinville">Joinville</option>
+                                <option value="Curitiba">Curitiba</option>
+                                <option value="Londrina">Londrina</option>
+                                <option value="Maringá">Maringá</option>
+                                <option value="Campinas">Campinas</option>
+                                <option value="São Paulo">São Paulo</option>
+                                <option value="Campo Grande">Campo Grande</option>
+                                <option value="Cuiabá">Cuiabá</option>
+                            </select>
+                            <div style="display: flex; gap: 6px;">
+                                <button id="cancelarObra" class="danger" style="min-width: 30px; padding: 4px 8px;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <button id="salvarObra" class="success" style="min-width: 30px; padding: 4px 8px;">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lista-obras" id="listaObras">
+                        <!-- Obras serão listadas aqui dinamicamente -->
+                        <div class="no-data" id="semObras">Nenhuma obra cadastrada</div>
+                    </div>
+                </div>
+                
+                <!-- Elevadores -->
+                <div class="section" id="secaoElevadores" style="display: none;">
+                    <div class="section-title">
+                        <h2>Elevadores - <span id="obraSelecionada"></span></h2>
+                        <button id="novoElevador" class="success" style="min-width: 70px; padding: 4px 8px;">
+                            <i class="fas fa-plus"></i> Novo
+                        </button>
+                    </div>
+                    
+                    <div id="novoElevadorForm" style="display: none; margin-bottom: 12px; padding: 8px; background-color: var(--card-bg); border-radius: 6px;">
+                        <input type="text" id="nomeElevador" placeholder="Nome/Número do Elevador" style="width: 100%; margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: flex-end; gap: 6px;">
+                            <button id="cancelarElevador" class="danger" style="min-width: 30px; padding: 4px 8px;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <button id="salvarElevador" class="success" style="min-width: 30px; padding: 4px 8px;">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="lista-elevadores" id="listaElevadores">
+                        <!-- Elevadores serão listados aqui dinamicamente -->
+                        <div class="no-data" id="semElevadores">Nenhum elevador cadastrado</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <!-- Tarefas do Elevador -->
+                <div class="section" id="secaoTarefas" style="display: none;">
+                    <div class="section-title">
+                        <h2>Tarefas do Elevador - <span id="elevadorSelecionado"></span></h2>
+                    </div>
+                    
+                    <div class="tarefas-container" id="tarefasContainer">
+                        <!-- Tarefas serão geradas aqui dinamicamente -->
+                        <div class="no-data">Selecione um elevador para visualizar suas tarefas</div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button id="salvarTarefas" class="success">
+                            <i class="fas fa-save"></i> Salvar Alterações
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Tabs e Dashboard -->
+                <div class="tabs" id="mainTabs">
+                    <div class="tab active" data-tab="geral">Geral</div>
+                    <div class="tab" data-tab="regional">Por Regional</div>
+                    <div class="tab" data-tab="obra">Por Obra</div>
+                </div>
+                
+                <div class="tab-content active" id="tabGeral">
+                    <div class="dashboard">
+                        <div class="dashboard-title">Distribuição Geral de Motivos de Atraso</div>
+                        <div class="dashboard-content">
+                            <div class="chart-container">
+                                <canvas id="motivosAtrasoChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="tabRegional">
+                    <div class="dashboard">
+                        <div class="dashboard-title">Distribuição por Regional</div>
+                        <div class="dashboard-content">
+                            <div class="chart-grid">
+                                <div class="chart-card">
+                                    <div class="chart-title">Atrasos por Regional</div>
+                                    <canvas id="regionalChart"></canvas>
+                                </div>
+                                <div class="chart-card">
+                                    <div class="chart-title">Motivos de Atraso por Regional</div>
+                                    <select id="selectRegionalChart" class="form-control">
+                                        <option value="Porto Alegre">Porto Alegre</option>
+                                        <option value="Joinville">Joinville</option>
+                                        <option value="Curitiba">Curitiba</option>
+                                        <option value="Londrina">Londrina</option>
+                                        <option value="Maringá">Maringá</option>
+                                        <option value="
